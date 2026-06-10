@@ -13,7 +13,16 @@ config :whatsappbot,
 
 config :whatsappbot, Oban,
   repo: Whatsappbot.Repo,
-  plugins: [Oban.Plugins.Pruner],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"* * * * *", Whatsappbot.Workers.EndpointRefreshWorker,
+        args: %{"strategy" => "poll_60s"}, queue: :endpoint_refresh},
+       {"*/5 * * * *", Whatsappbot.Workers.EndpointRefreshWorker,
+        args: %{"strategy" => "poll_300s"}, queue: :endpoint_refresh}
+     ]}
+  ],
   queues: [default: 10, endpoint_refresh: 5, meta_send: 10]
 
 # Configures the endpoint

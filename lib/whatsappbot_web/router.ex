@@ -1,6 +1,8 @@
 defmodule WhatsappbotWeb.Router do
   use WhatsappbotWeb, :router
 
+  import WhatsappbotWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule WhatsappbotWeb.Router do
     plug :put_root_layout, html: {WhatsappbotWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -40,5 +43,54 @@ defmodule WhatsappbotWeb.Router do
       live_dashboard "/dashboard", metrics: WhatsappbotWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  ## Authentication routes
+
+  scope "/", WhatsappbotWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    get "/users/register", UserRegistrationController, :new
+    post "/users/register", UserRegistrationController, :create
+    get "/users/log_in", UserSessionController, :new
+    post "/users/log_in", UserSessionController, :create
+    get "/users/reset_password", UserResetPasswordController, :new
+    post "/users/reset_password", UserResetPasswordController, :create
+    get "/users/reset_password/:token", UserResetPasswordController, :edit
+    put "/users/reset_password/:token", UserResetPasswordController, :update
+  end
+
+  scope "/", WhatsappbotWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    get "/users/settings", UserSettingsController, :edit
+    put "/users/settings", UserSettingsController, :update
+    get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+  end
+
+  scope "/", WhatsappbotWeb do
+    pipe_through [:browser]
+
+    live_session :require_authenticated_user,
+      on_mount: [{WhatsappbotWeb.UserAuth, :ensure_authenticated}] do
+      live "/workspaces", WorkspacesLive.Index, :index
+      live "/workspaces/new", WorkspacesLive.Form, :new
+      live "/workspaces/:id", WorkspacesLive.Show, :show
+      live "/workspaces/:id/edit", WorkspacesLive.Form, :edit
+      live "/workspaces/:id/endpoint", WorkspacesLive.Endpoint, :show
+      live "/workspaces/:id/cta_rules", WorkspacesLive.CTARules, :show
+      live "/workspaces/:id/playground", PlaygroundLive, :show
+      live "/workspaces/:id/meta", WorkspacesLive.Section, :meta
+    end
+  end
+
+  scope "/", WhatsappbotWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+    get "/users/confirm", UserConfirmationController, :new
+    post "/users/confirm", UserConfirmationController, :create
+    get "/users/confirm/:token", UserConfirmationController, :edit
+    post "/users/confirm/:token", UserConfirmationController, :update
   end
 end

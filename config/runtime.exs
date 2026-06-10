@@ -38,10 +38,28 @@ encryption_key =
 
 config :whatsappbot, Whatsappbot.Vault,
   ciphers: [
-    default: {Cloak.Ciphers.AES.GCM,
-      tag: "AES.GCM.V1",
-      key: Base.decode64!(encryption_key)}
+    default: {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: Base.decode64!(encryption_key)}
   ]
+
+anthropic_api_key =
+  case System.get_env("ANTHROPIC_API_KEY") do
+    key when is_binary(key) and byte_size(key) > 0 ->
+      key
+
+    _ ->
+      if config_env() == :prod do
+        raise """
+        environment variable ANTHROPIC_API_KEY is missing.
+        """
+      else
+        "test-anthropic-key"
+      end
+  end
+
+config :whatsappbot, :anthropic,
+  api_key: anthropic_api_key,
+  model: "claude-sonnet-4-20250514",
+  max_tokens: 1024
 
 if config_env() == :prod do
   database_url =

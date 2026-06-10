@@ -63,31 +63,31 @@
 
 ## TASK GROUP 2 — Authentication
 
-- [ ] `T2.1` Generate `phx.gen.auth`
-  - [ ] Run `mix phx.gen.auth Accounts User users`.
-  - [ ] Run `mix ecto.migrate`.
-  - [ ] Confirm the generator created the User schema, registration/login/logout LiveViews, and session tokens.
+- [x] `T2.1` Generate `phx.gen.auth`
+  - [x] Run `mix phx.gen.auth Accounts User users`.
+  - [x] Run `mix ecto.migrate`.
+  - [x] Confirm the generator created the User schema, registration/login/logout pages, and session tokens.
 
-- [ ] `T2.2` Customise the registration form
-  - [ ] Add a required `name` field to the registration form in `lib/whatsappbot_web/live/user_registration_live.ex`.
-  - [ ] Add `name` to the User schema and migration with `add_column :users, :name, :string`.
-  - [ ] Show the user's name in the top nav after login.
+- [x] `T2.2` Customise the registration form
+  - [x] Add a required `name` field to the registration form in `lib/whatsappbot_web/controllers/user_registration_html/new.html.heex`.
+  - [x] Add `name` to the User schema and migration with `add_column :users, :name, :string`.
+  - [x] Show the user's name in the top nav after login.
 
-- [ ] `T2.3` Add a post-registration redirect
-  - [ ] After successful registration, redirect to `/workspaces/new` instead of `/`.
+- [x] `T2.3` Add a post-registration redirect
+  - [x] After successful registration, redirect to `/workspaces/new` instead of `/`.
 
-- [ ] `T2.4` Write auth tests
-  - [ ] Test: register with valid data redirects to `/workspaces/new`.
-  - [ ] Test: register with duplicate email shows an error.
-  - [ ] Test: login establishes a session.
-  - [ ] Test: logout clears the session.
+- [x] `T2.4` Write auth tests
+  - [x] Test: register with valid data redirects to `/workspaces/new`.
+  - [x] Test: register with duplicate email shows an error.
+  - [x] Test: login establishes a session.
+  - [x] Test: logout clears the session.
 
 ---
 
 ## TASK GROUP 3 — Workspaces
 
-- [ ] `T3.1` Generate Workspace schema
-  - [ ] Run:
+- [x] `T3.1` Generate Workspace schema
+  - [x] Run:
     ```bash
     mix phx.gen.schema Workspaces.Workspace workspaces \
       account_id:references:users \
@@ -98,48 +98,48 @@
     mix ecto.migrate
     ```
 
-- [ ] `T3.2` Create workspace context in `lib/whatsappbot/workspaces.ex`
-  - [ ] Add `list_workspaces(user_id)` scoped to account.
-  - [ ] Add `get_workspace!(id, user_id)` that raises if not found or wrong owner.
-  - [ ] Add `create_workspace(attrs, user_id)`.
-  - [ ] Add `update_workspace(workspace, attrs)`.
-  - [ ] Add `delete_workspace(workspace)`.
-  - [ ] Auto-generate a slug from name on create using downcase and spaces-to-hyphens.
+- [x] `T3.2` Create workspace context in `lib/whatsappbot/workspaces.ex`
+  - [x] Add `list_workspaces(user_id)` scoped to account.
+  - [x] Add `get_workspace!(id, user_id)` that raises if not found or wrong owner.
+  - [x] Add `create_workspace(attrs, user_id)`.
+  - [x] Add `update_workspace(workspace, attrs)`.
+  - [x] Add `delete_workspace(workspace)`.
+  - [x] Auto-generate a slug from name on create using downcase and spaces-to-hyphens.
 
-- [ ] `T3.3` Build Workspaces LiveView (index + form)
-  - [ ] Add routes:
-    - [ ] `GET /workspaces` lists all workspaces for the logged-in user.
-    - [ ] `GET /workspaces/new` shows the create form.
-    - [ ] `GET /workspaces/:id/edit` shows the edit form.
-  - [ ] `WorkspacesLive.Index` renders a card grid of workspaces.
-  - [ ] Each card shows name, slug, language badge, and an "Open" button.
-  - [ ] Add a "New workspace" button in the top right.
-  - [ ] `WorkspacesLive.Form` includes:
-    - [ ] Name (required).
-    - [ ] AI Instructions textarea with placeholder `"You are a helpful sales assistant for..."`.
-    - [ ] Language selector: English only | Swahili only | Both.
-  - [ ] On save, redirect to `/workspaces/:id`.
+- [x] `T3.3` Build Workspaces LiveView (index + form)
+  - [x] Add routes:
+    - [x] `GET /workspaces` lists all workspaces for the logged-in user.
+    - [x] `GET /workspaces/new` shows the create form.
+    - [x] `GET /workspaces/:id/edit` shows the edit form.
+  - [x] `WorkspacesLive.Index` renders a card grid of workspaces.
+  - [x] Each card shows name, slug, language badge, and an "Open" button.
+  - [x] Add a "New workspace" button in the top right.
+  - [x] `WorkspacesLive.Form` includes:
+    - [x] Name (required).
+    - [x] AI Instructions textarea with placeholder `"You are a helpful sales assistant for..."`.
+    - [x] Language selector: English only | Swahili only | Both.
+  - [x] On save, redirect to `/workspaces/:id`.
 
-- [ ] `T3.4` Build workspace dashboard LiveView
-  - [ ] Add route `GET /workspaces/:id`.
-  - [ ] Show 4 cards linking to:
-    - [ ] Data Endpoint → `/workspaces/:id/endpoint`
-    - [ ] CTA Rules → `/workspaces/:id/cta_rules`
-    - [ ] Playground → `/workspaces/:id/playground`
-    - [ ] Meta Connection → `/workspaces/:id/meta`
-  - [ ] Show green status badges for configured sections and grey for unconfigured ones.
+- [x] `T3.4` Build workspace dashboard LiveView
+  - [x] Add route `GET /workspaces/:id`.
+  - [x] Show 4 cards linking to:
+    - [x] Data Endpoint → `/workspaces/:id/endpoint`
+    - [x] CTA Rules → `/workspaces/:id/cta_rules`
+    - [x] Playground → `/workspaces/:id/playground`
+    - [x] Meta Connection → `/workspaces/:id/meta`
+  - [x] Show green status badges for configured sections and grey for unconfigured ones.
 
-- [ ] `T3.5` Write workspace tests
-  - [ ] Test: create workspace auto-generates slug.
-  - [ ] Test: another user's workspace cannot be accessed.
-  - [ ] Test: workspace AI instructions can be updated.
+- [x] `T3.5` Write workspace tests
+  - [x] Test: create workspace auto-generates slug.
+  - [x] Test: another user's workspace cannot be accessed.
+  - [x] Test: workspace AI instructions can be updated.
 
 ---
 
 ## TASK GROUP 4 — Data endpoint connector
 
-- [ ] `T4.1` Generate Endpoint schema
-  - [ ] Run:
+- [x] `T4.1` Generate Endpoint schema
+  - [x] Run:
     ```bash
     mix phx.gen.schema Endpoints.Endpoint endpoints \
       workspace_id:references:workspaces \
@@ -153,54 +153,54 @@
     mix ecto.migrate
     ```
 
-- [ ] `T4.2` Add Cloak encrypted field for headers
-  - [ ] Replace `headers_encrypted` in the Endpoint schema with:
+- [x] `T4.2` Add Cloak encrypted field for headers
+  - [x] Replace `headers_encrypted` in the Endpoint schema with:
     ```elixir
     field :headers, Whatsappbot.Encrypted.Map
     ```
-  - [ ] Create `lib/whatsappbot/encrypted/map.ex` using `Cloak.Ecto.Binary` behaviour.
+  - [x] Create `lib/whatsappbot/encrypted/map.ex` using `Cloak.Ecto.Binary` behaviour.
 
-- [ ] `T4.3` Create endpoint context in `lib/whatsappbot/endpoints.ex`
-  - [ ] Add `get_endpoint(workspace_id)` for one endpoint per workspace in v1.
-  - [ ] Add `upsert_endpoint(workspace_id, attrs)`.
-  - [ ] Add `fetch_live_data(endpoint)` returning `{:ok, data}` or `{:error, reason}`.
-  - [ ] Add `refresh_cached_data(endpoint)` updating `cached_data` and `last_fetched_at`.
-  - [ ] Implement `fetch_live_data` logic:
-    - [ ] If method is `"GET"`, call `Req.get!(url, headers: headers)`.
-    - [ ] If method is `"POST"`, substitute `{{query}}` in `body_template` and call `Req.post!(url, json: body, headers: headers)`.
-    - [ ] Parse the response body as JSON.
-    - [ ] Return at most the first 50 items to avoid token bloat.
+- [x] `T4.3` Create endpoint context in `lib/whatsappbot/endpoints.ex`
+  - [x] Add `get_endpoint(workspace_id)` for one endpoint per workspace in v1.
+  - [x] Add `upsert_endpoint(workspace_id, attrs)`.
+  - [x] Add `fetch_live_data(endpoint)` returning `{:ok, data}` or `{:error, reason}`.
+  - [x] Add `refresh_cached_data(endpoint)` updating `cached_data` and `last_fetched_at`.
+  - [x] Implement `fetch_live_data` logic:
+    - [x] If method is `"GET"`, call `Req.get!(url, headers: headers)`.
+    - [x] If method is `"POST"`, substitute `{{query}}` in `body_template` and call `Req.post!(url, json: body, headers: headers)`.
+    - [x] Parse the response body as JSON.
+    - [x] Return at most the first 50 items to avoid token bloat.
 
-- [ ] `T4.4` Build Endpoint LiveView at `/workspaces/:id/endpoint`
-  - [ ] Add form fields:
-    - [ ] URL (required text input).
-    - [ ] Method (GET / POST select).
-    - [ ] Headers textarea using `Key: Value` per line.
-    - [ ] Body template textarea shown only for POST, with a hint to use `{{query}}`.
-    - [ ] Refresh strategy select: On demand | Every 60s | Every 5 min.
-  - [ ] Add a "Test connection" button.
-  - [ ] On click, call `fetch_live_data` and show a collapsible JSON preview.
-  - [ ] Show a red banner with HTTP status or error message on failure.
-  - [ ] Show "Last fetched: X minutes ago" when cached data exists.
+- [x] `T4.4` Build Endpoint LiveView at `/workspaces/:id/endpoint`
+  - [x] Add form fields:
+    - [x] URL (required text input).
+    - [x] Method (GET / POST select).
+    - [x] Headers textarea using `Key: Value` per line.
+    - [x] Body template textarea shown only for POST, with a hint to use `{{query}}`.
+    - [x] Refresh strategy select: On demand | Every 60s | Every 5 min.
+  - [x] Add a "Test connection" button.
+  - [x] On click, call `fetch_live_data` and show a collapsible JSON preview.
+  - [x] Show a red banner with HTTP status or error message on failure.
+  - [x] Show "Last fetched: X minutes ago" when cached data exists.
 
-- [ ] `T4.5` Add Oban worker for polling endpoints
-  - [ ] Create `lib/whatsappbot/workers/endpoint_refresh_worker.ex`.
-  - [ ] Schedule it with recurring Oban cron for `poll_60s` and `poll_300s`.
-  - [ ] Call `Endpoints.refresh_cached_data(endpoint)`.
-  - [ ] Broadcast `{:endpoint_refreshed, workspace_id}` via PubSub so Playground can react.
+- [x] `T4.5` Add Oban worker for polling endpoints
+  - [x] Create `lib/whatsappbot/workers/endpoint_refresh_worker.ex`.
+  - [x] Schedule it with recurring Oban cron for `poll_60s` and `poll_300s`.
+  - [x] Call `Endpoints.refresh_cached_data(endpoint)`.
+  - [x] Broadcast `{:endpoint_refreshed, workspace_id}` via PubSub so Playground can react.
 
-- [ ] `T4.6` Write endpoint tests
-  - [ ] Test: GET endpoint returns parsed JSON.
-  - [ ] Test: POST endpoint substitutes `{{query}}`.
-  - [ ] Test: headers are encrypted at rest.
-  - [ ] Test: `fetch_live_data` returns `{:error, _}` on bad URL.
+- [x] `T4.6` Write endpoint tests
+  - [x] Test: GET endpoint returns parsed JSON.
+  - [x] Test: POST endpoint substitutes `{{query}}`.
+  - [x] Test: headers are encrypted at rest.
+  - [x] Test: `fetch_live_data` returns `{:error, _}` on bad URL.
 
 ---
 
 ## TASK GROUP 5 — AI layer
 
-- [ ] `T5.1` Configure Anthropic API
-  - [ ] Add this to `config/runtime.exs`:
+- [x] `T5.1` Configure Anthropic API
+  - [x] Add this to `config/runtime.exs`:
     ```elixir
     config :whatsappbot, :anthropic,
       api_key: System.fetch_env!("ANTHROPIC_API_KEY"),
@@ -208,9 +208,9 @@
       max_tokens: 1024
     ```
 
-- [ ] `T5.2` Build AI context builder in `lib/whatsappbot/ai/context_builder.ex`
-  - [ ] Implement `build_system_prompt(workspace, endpoint_data)`.
-  - [ ] Use this template:
+- [x] `T5.2` Build AI context builder in `lib/whatsappbot/ai/context_builder.ex`
+  - [x] Implement `build_system_prompt(workspace, endpoint_data)`.
+  - [x] Use this template:
     ```text
     You are an AI sales assistant for {{workspace.name}}.
 
@@ -235,29 +235,29 @@
       "cta": null | { "type": "website|phone|whatsapp|reply_buttons|list_message", "payload": {...} }
     }
     ```
-  - [ ] Language instruction mapping:
-    - [ ] `"en"` → `"Respond in English only."`
-    - [ ] `"sw"` → `"Respond in Swahili only."`
-    - [ ] `"both"` → `"Detect the buyer's language and respond in the same language (English or Swahili)."`
-  - [ ] Format endpoint JSON into a readable text block.
-  - [ ] Truncate endpoint data to 3000 characters max.
+  - [x] Language instruction mapping:
+    - [x] `"en"` → `"Respond in English only."`
+    - [x] `"sw"` → `"Respond in Swahili only."`
+    - [x] `"both"` → `"Detect the buyer's language and respond in the same language (English or Swahili)."`
+  - [x] Format endpoint JSON into a readable text block.
+  - [x] Truncate endpoint data to 3000 characters max.
 
-- [ ] `T5.3` Build CTA rules injector in `lib/whatsappbot/ai/cta_injector.ex`
-  - [ ] Implement `inject_cta_rules(system_prompt, cta_rules)`.
-  - [ ] Append this section to the system prompt:
+- [x] `T5.3` Build CTA rules injector in `lib/whatsappbot/ai/cta_injector.ex`
+  - [x] Implement `inject_cta_rules(system_prompt, cta_rules)`.
+  - [x] Append this section to the system prompt:
     ```text
     CTA RULES (apply the first matching rule):
     1. {{rule.trigger_description}} → use CTA type "{{rule.cta_type}}" with payload {{rule.cta_payload_as_json}}
     2. ...
     ```
 
-- [ ] `T5.4` Build Claude client in `lib/whatsappbot/ai/claude_client.ex`
-  - [ ] Implement `chat(messages, system_prompt)`.
-  - [ ] Return `{:ok, %{reply: text, cta: map_or_nil, tokens: integer}}` or `{:error, reason}`.
-  - [ ] POST to `https://api.anthropic.com/v1/messages`.
-  - [ ] Send headers `x-api-key`, `anthropic-version: 2023-06-01`, and `content-type: application/json`.
-  - [ ] Parse `response.content[0].text` as JSON.
-  - [ ] If JSON parsing fails, treat raw text as the reply with `cta: nil`.
+- [x] `T5.4` Build Claude client in `lib/whatsappbot/ai/claude_client.ex`
+  - [x] Implement `chat(messages, system_prompt)`.
+  - [x] Return `{:ok, %{reply: text, cta: map_or_nil, tokens: integer}}` or `{:error, reason}`.
+  - [x] POST to `https://api.anthropic.com/v1/messages`.
+  - [x] Send headers `x-api-key`, `anthropic-version: 2023-06-01`, and `content-type: application/json`.
+  - [x] Parse `response.content[0].text` as JSON.
+  - [x] If JSON parsing fails, treat raw text as the reply with `cta: nil`.
   - [ ] Log total tokens from `usage.input_tokens + usage.output_tokens`.
 
 - [ ] `T5.5` Build conversation context builder
@@ -277,8 +277,8 @@
 
 ## TASK GROUP 6 — Conversations and messages
 
-- [ ] `T6.1` Generate schemas
-  - [ ] Run:
+- [x] `T6.1` Generate schemas
+  - [x] Run:
     ```bash
     mix phx.gen.schema Conversations.Conversation conversations \
       workspace_id:references:workspaces \
@@ -296,34 +296,34 @@
     mix ecto.migrate
     ```
 
-- [ ] `T6.2` Build conversations context in `lib/whatsappbot/conversations.ex`
-  - [ ] Add `get_or_create_conversation(workspace_id, phone_number, source)`.
-  - [ ] Add `list_conversations(workspace_id)` ordered by latest message.
-  - [ ] Add `get_conversation!(id, workspace_id)`.
-  - [ ] Add `add_message(conversation, role, content, opts \\ [])`.
-  - [ ] Support opts for `cta`, `endpoint_snapshot`, and `tokens_used`.
-  - [ ] Add `list_messages(conversation_id)` returning the last 50 messages ordered ascending.
+- [x] `T6.2` Build conversations context in `lib/whatsappbot/conversations.ex`
+  - [x] Add `get_or_create_conversation(workspace_id, phone_number, source)`.
+  - [x] Add `list_conversations(workspace_id)` ordered by latest message.
+  - [x] Add `get_conversation!(id, workspace_id)`.
+  - [x] Add `add_message(conversation, role, content, opts \\ [])`.
+  - [x] Support opts for `cta`, `endpoint_snapshot`, and `tokens_used`.
+  - [x] Add `list_messages(conversation_id)` returning the last 50 messages ordered ascending.
 
-- [ ] `T6.3` Build message dispatcher in `lib/whatsappbot/conversations/dispatcher.ex`
-  - [ ] Implement `dispatch(workspace_id, phone_number, user_message, source \\ :playground)`.
+- [x] `T6.3` Build message dispatcher in `lib/whatsappbot/conversations/dispatcher.ex`
+  - [x] Implement `dispatch(workspace_id, phone_number, user_message, source \\ :playground)`.
   - [ ] Steps:
-    - [ ] Load workspace, endpoint, and `cta_rules`.
-    - [ ] Call `get_or_create_conversation(workspace_id, phone_number, source)`.
-    - [ ] Fetch endpoint data, using cache unless refresh is on-demand.
-    - [ ] Save the user message with `endpoint_snapshot`.
-    - [ ] Build the system prompt and inject CTA rules.
-    - [ ] Build Anthropic messages.
-    - [ ] Call `claude_client.chat(messages, system_prompt)`.
-    - [ ] Save the assistant reply with `cta` and `tokens_used`.
-    - [ ] Broadcast `{:new_message, message}` via PubSub on `"conversation:#{conversation.id}"`.
-    - [ ] Return `{:ok, message}`.
+    - [x] Load workspace, endpoint, and `cta_rules`.
+    - [x] Call `get_or_create_conversation(workspace_id, phone_number, source)`.
+    - [x] Fetch endpoint data, using cache unless refresh is on-demand.
+    - [x] Save the user message with `endpoint_snapshot`.
+    - [x] Build the system prompt and inject CTA rules.
+    - [x] Build Anthropic messages.
+    - [x] Call `claude_client.chat(messages, system_prompt)`.
+    - [x] Save the assistant reply with `cta` and `tokens_used`.
+    - [x] Broadcast `{:new_message, message}` via PubSub on `"conversation:#{conversation.id}"`.
+    - [x] Return `{:ok, message}`.
 
 ---
 
 ## TASK GROUP 7 — CTA rules
 
-- [ ] `T7.1` Generate CTA rule schema
-  - [ ] Run:
+- [x] `T7.1` Generate CTA rule schema
+  - [x] Run:
     ```bash
     mix phx.gen.schema CTARules.CTARule cta_rules \
       workspace_id:references:workspaces \
@@ -334,40 +334,40 @@
     mix ecto.migrate
     ```
 
-- [ ] `T7.2` Build `CTARules` context
-  - [ ] Add `list_cta_rules(workspace_id)` ordered by ascending priority.
-  - [ ] Add `create_cta_rule(workspace_id, attrs)`.
-  - [ ] Add `update_cta_rule(rule, attrs)`.
-  - [ ] Add `delete_cta_rule(rule)`.
+- [x] `T7.2` Build `CTARules` context
+  - [x] Add `list_cta_rules(workspace_id)` ordered by ascending priority.
+  - [x] Add `create_cta_rule(workspace_id, attrs)`.
+  - [x] Add `update_cta_rule(rule, attrs)`.
+  - [x] Add `delete_cta_rule(rule)`.
 
-- [ ] `T7.3` Build CTA Rules LiveView at `/workspaces/:id/cta_rules`
-  - [ ] Show existing rules in a sortable table with priority, trigger description, CTA type, and actions.
-  - [ ] Add an "Add rule" slide-over form.
-  - [ ] Include form fields:
-    - [ ] Trigger description textarea with placeholder `"When the buyer asks about price or wants to buy"`.
-    - [ ] CTA type select dropdown referencing CTA types in `project.md`.
-    - [ ] Dynamic payload fields by CTA type:
-      - [ ] `website` → URL field
-      - [ ] `phone` → phone number field
-      - [ ] `whatsapp` → WhatsApp number field
-      - [ ] `reply_buttons` → up to 3 button label inputs
-      - [ ] `list_message` → up to 10 item rows with title and description
-      - [ ] `location` → latitude and longitude fields
-      - [ ] `catalog` → product ID field
-      - [ ] `custom` → free-text template field
-    - [ ] Priority number auto-filled as the next in sequence.
+- [x] `T7.3` Build CTA Rules LiveView at `/workspaces/:id/cta_rules`
+  - [x] Show existing rules in a sortable table with priority, trigger description, CTA type, and actions.
+  - [x] Add an "Add rule" slide-over form.
+  - [x] Include form fields:
+    - [x] Trigger description textarea with placeholder `"When the buyer asks about price or wants to buy"`.
+    - [x] CTA type select dropdown referencing CTA types in `project.md`.
+    - [x] Dynamic payload fields by CTA type:
+      - [x] `website` → URL field
+      - [x] `phone` → phone number field
+      - [x] `whatsapp` → WhatsApp number field
+      - [x] `reply_buttons` → up to 3 button label inputs
+      - [x] `list_message` → up to 10 item rows with title and description
+      - [x] `location` → latitude and longitude fields
+      - [x] `catalog` → product ID field
+      - [x] `custom` → free-text template field
+    - [x] Priority number auto-filled as the next in sequence.
 
-- [ ] `T7.4` Write CTA rule tests
-  - [ ] Test: creating a rule makes it appear in the list.
-  - [ ] Test: `cta_injector` formats rules correctly in the system prompt.
+- [x] `T7.4` Write CTA rule tests
+  - [x] Test: creating a rule makes it appear in the list.
+  - [x] Test: `cta_injector` formats rules correctly in the system prompt.
 
 ---
 
 ## TASK GROUP 8 — WhatsApp Playground
 
-- [ ] `T8.1` Build Playground LiveView at `/workspaces/:id/playground`
-  - [ ] Match the feel of WhatsApp Web.
-  - [ ] Use this layout:
+- [x] `T8.1` Build Playground LiveView at `/workspaces/:id/playground`
+  - [x] Match the feel of WhatsApp Web.
+  - [x] Use this layout:
     ```text
     ┌─────────────────────────────────────────┐
     │  [Bot name]  ●  Connected to: endpoint  │
@@ -382,15 +382,15 @@
     │  [ Type a message...          ] [Send]  │
     └─────────────────────────────────────────┘
     ```
-  - [ ] Apply styling:
-    - [ ] Background `#ECE5DD`
-    - [ ] User bubbles `#DCF8C6`, right-aligned
-    - [ ] Bot bubbles white, left-aligned, subtle shadow
-    - [ ] `system-ui` at `14px`
-    - [ ] Timestamps on each bubble
+  - [x] Apply styling:
+    - [x] Background `#ECE5DD`
+    - [x] User bubbles `#DCF8C6`, right-aligned
+    - [x] Bot bubbles white, left-aligned, subtle shadow
+    - [x] `system-ui` at `14px`
+    - [x] Timestamps on each bubble
 
-- [ ] `T8.2` Implement Playground LiveView
-  - [ ] Use this module shape:
+- [x] `T8.2` Implement Playground LiveView
+  - [x] Use this module shape:
     ```elixir
     defmodule WhatsappbotWeb.PlaygroundLive do
       use WhatsappbotWeb, :live_view
@@ -401,31 +401,31 @@
       # Use LiveView streams for messages (stream :messages)
     end
     ```
-  - [ ] Use `phone_number = "playground_#{workspace.id}"` for test sessions.
-  - [ ] Add a "Clear chat" button that deletes the playground conversation and starts fresh.
-  - [ ] Add a "Copy last reply" icon on bot bubbles.
+  - [x] Use `phone_number = "playground_#{workspace.id}"` for test sessions.
+  - [x] Add a "Clear chat" button that deletes the playground conversation and starts fresh.
+  - [x] Add a "Copy last reply" icon on bot bubbles.
 
-- [ ] `T8.3` Render CTAs inside playground bubbles
-  - [ ] After the bot reply text, render CTA elements as follows:
-    - [ ] `website` → blue link button with icon and URL
-    - [ ] `phone` → green button with icon and number
-    - [ ] `whatsapp` → green button with WhatsApp icon
-    - [ ] `reply_buttons` → row of up to 3 tappable chips
-    - [ ] `list_message` → expandable list card
-    - [ ] `location` → map pin with coordinates
-    - [ ] `custom` → italic template text
-  - [ ] Make the interactions look as close to real WhatsApp interactive messages as possible.
+- [x] `T8.3` Render CTAs inside playground bubbles
+  - [x] After the bot reply text, render CTA elements as follows:
+    - [x] `website` → blue link button with icon and URL
+    - [x] `phone` → green button with icon and number
+    - [x] `whatsapp` → green button with WhatsApp icon
+    - [x] `reply_buttons` → row of up to 3 tappable chips
+    - [x] `list_message` → expandable list card
+    - [x] `location` → map pin with coordinates
+    - [x] `custom` → italic template text
+  - [x] Make the interactions look as close to real WhatsApp interactive messages as possible.
 
-- [ ] `T8.4` Add a collapsible playground sidebar
-  - [ ] Show endpoint data preview as pretty-printed JSON.
-  - [ ] Show the last system prompt sent to AI.
-  - [ ] Show a running token usage counter for the session.
-  - [ ] Add a "Refresh endpoint data" button that forces a re-fetch.
+- [x] `T8.4` Add a collapsible playground sidebar
+  - [x] Show endpoint data preview as pretty-printed JSON.
+  - [x] Show the last system prompt sent to AI.
+  - [x] Show a running token usage counter for the session.
+  - [x] Add a "Refresh endpoint data" button that forces a re-fetch.
 
-- [ ] `T8.5` Write playground tests
-  - [ ] Test: sending a message shows the assistant reply.
-  - [ ] Test: CTA appears in the bubble when a rule matches.
-  - [ ] Test: clear chat removes the messages.
+- [x] `T8.5` Write playground tests
+  - [x] Test: sending a message shows the assistant reply.
+  - [x] Test: CTA appears in the bubble when a rule matches.
+  - [x] Test: clear chat removes the messages.
 
 ---
 
