@@ -29,6 +29,13 @@ defmodule WhatsappbotWeb.Router do
     get "/test/products", ProductController, :index
   end
 
+  scope "/webhooks", WhatsappbotWeb do
+    pipe_through :api
+
+    get "/whatsapp/:slug", WebhookController, :handle_verification
+    post "/whatsapp/:slug", WebhookController, :handle_message
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", WhatsappbotWeb do
   #   pipe_through :api
@@ -86,7 +93,7 @@ defmodule WhatsappbotWeb.Router do
       live "/workspaces/:id/endpoint", WorkspacesLive.Endpoint, :show
       live "/workspaces/:id/cta_rules", WorkspacesLive.CTARules, :show
       live "/workspaces/:id/playground", PlaygroundLive, :show
-      live "/workspaces/:id/meta", WorkspacesLive.Section, :meta
+      live "/workspaces/:id/meta", WorkspacesLive.Meta, :meta
     end
   end
 

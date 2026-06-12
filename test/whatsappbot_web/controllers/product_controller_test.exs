@@ -14,7 +14,7 @@ defmodule WhatsappbotWeb.ProductControllerTest do
              "description" => "Heavyweight cotton hoodie with embroidered logo.",
              "id" => 1,
              "image_url" =>
-               "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+               "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?fm=jpg&fit=crop&w=900&q=80",
              "in_stock" => true,
              "name" => "Classic Hoodie",
              "price" => 39.99,
