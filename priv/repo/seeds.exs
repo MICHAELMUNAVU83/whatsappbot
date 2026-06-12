@@ -53,7 +53,7 @@ dotenv =
       %{}
   end
 
-env_value = fn key, default \\ nil ->
+env_value = fn key, default ->
   case System.get_env(key) || Map.get(dotenv, key) || default do
     value when is_binary(value) ->
       trimmed = String.trim(value)
@@ -301,9 +301,9 @@ Enum.with_index(rules, 1)
 end)
 
 wa_values = %{
-  "phone_number_id" => env_value.("WA_PHONE_NUMBER_ID"),
-  "waba_id" => env_value.("WA_WABA_ID"),
-  "access_token" => env_value.("WA_ACCESS_TOKEN")
+  "phone_number_id" => env_value.("WA_PHONE_NUMBER_ID", nil),
+  "waba_id" => env_value.("WA_WABA_ID", nil),
+  "access_token" => env_value.("WA_ACCESS_TOKEN", nil)
 }
 
 present_wa_keys =
