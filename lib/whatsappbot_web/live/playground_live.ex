@@ -1,9 +1,6 @@
 defmodule WhatsappbotWeb.PlaygroundLive do
   use WhatsappbotWeb, :live_view
 
-  alias Whatsappbot.AI.ContextBuilder
-  alias Whatsappbot.AI.CtaInjector
-  alias Whatsappbot.CTARules
   alias Whatsappbot.Conversations
   alias Whatsappbot.Conversations.Dispatcher
   alias Whatsappbot.Conversations.Message
@@ -19,10 +16,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
      |> assign(:endpoint, nil)
      |> assign(:conversation, nil)
      |> assign(:phone_number, nil)
-     |> assign(:endpoint_preview_json, nil)
-     |> assign(:last_system_prompt, nil)
-     |> assign(:session_tokens, 0)
-     |> assign(:sidebar_open, true)
      |> assign(:subscribed_workspace_id, nil)
      |> assign(:message_ids, MapSet.new())
      |> assign(:pending_user_message, nil)
@@ -48,12 +41,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
           |> assign(:endpoint, endpoint)
           |> assign(:conversation, conversation)
           |> assign(:phone_number, phone_number)
-          |> assign(
-            :endpoint_preview_json,
-            preview_json(latest_endpoint_snapshot(messages, endpoint))
-          )
-          |> assign(:last_system_prompt, rebuild_system_prompt(workspace, messages))
-          |> assign(:session_tokens, total_tokens(messages))
           |> assign(:message_ids, message_ids(messages))
           |> stream(:messages, messages, reset: true)
 
@@ -89,39 +76,8 @@ defmodule WhatsappbotWeb.PlaygroundLive do
      |> assign(:pending_user_message, nil)
      |> assign(:assistant_pending, false)
      |> assign(:active_dispatch_ref, nil)
-     |> assign(:session_tokens, 0)
-     |> assign(:last_system_prompt, nil)
-     |> assign(
-       :endpoint_preview_json,
-       preview_json(current_endpoint_snapshot(socket.assigns.endpoint))
-     )
      |> assign_message_form("")
      |> stream(:messages, [], reset: true)}
-  end
-
-  def handle_event("toggle_sidebar", _params, socket) do
-    {:noreply, update(socket, :sidebar_open, &(!&1))}
-  end
-
-  def handle_event("refresh_endpoint_data", _params, socket) do
-    case socket.assigns.endpoint do
-      nil ->
-        {:noreply,
-         put_flash(socket, :error, "Add an endpoint first so the playground has data to fetch.")}
-
-      endpoint ->
-        case Endpoints.refresh_cached_data(endpoint) do
-          {:ok, refreshed_endpoint} ->
-            {:noreply,
-             socket
-             |> assign(:endpoint, refreshed_endpoint)
-             |> assign(:endpoint_preview_json, preview_json(refreshed_endpoint.cached_data))
-             |> put_flash(:info, "Endpoint data refreshed.")}
-
-          {:error, reason} ->
-            {:noreply, put_flash(socket, :error, format_error(reason))}
-        end
-    end
   end
 
   @impl true
@@ -133,8 +89,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
          :endpoint,
          Endpoints.get_endpoint(socket.assigns.workspace.id) || prepared.endpoint
        )
-       |> assign(:endpoint_preview_json, preview_json(prepared.endpoint_data))
-       |> assign(:last_system_prompt, prepared.system_prompt)
        |> assign(:pending_user_message, nil)
        |> assign(:assistant_pending, false)
        |> assign(:active_dispatch_ref, nil)}
@@ -177,7 +131,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
       {:noreply,
        socket
        |> reconcile_pending_state(message)
-       |> maybe_count_tokens(message)
        |> stream_new_messages([message])}
     end
   end
@@ -191,12 +144,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
        |> assign(:pending_user_message, nil)
        |> assign(:assistant_pending, false)
        |> assign(:active_dispatch_ref, nil)
-       |> assign(:session_tokens, 0)
-       |> assign(:last_system_prompt, nil)
-       |> assign(
-         :endpoint_preview_json,
-         preview_json(current_endpoint_snapshot(socket.assigns.endpoint))
-       )
        |> stream(:messages, [], reset: true)}
     else
       {:noreply, socket}
@@ -205,15 +152,7 @@ defmodule WhatsappbotWeb.PlaygroundLive do
 
   def handle_info({:endpoint_refreshed, workspace_id}, socket) do
     if socket.assigns.workspace && socket.assigns.workspace.id == workspace_id do
-      refreshed_endpoint = Endpoints.get_endpoint(workspace_id)
-
-      {:noreply,
-       socket
-       |> assign(:endpoint, refreshed_endpoint)
-       |> assign(
-         :endpoint_preview_json,
-         preview_json(current_endpoint_snapshot(refreshed_endpoint))
-       )}
+      {:noreply, assign(socket, :endpoint, Endpoints.get_endpoint(workspace_id))}
     else
       {:noreply, socket}
     end
@@ -279,7 +218,7 @@ defmodule WhatsappbotWeb.PlaygroundLive do
     ~H"""
     <div class="mt-2 space-y-2 border-t border-line pt-2">
       <div
-        :if={cta_preview?(@payload)}
+        :if={cta_preview?(@type, @payload)}
         class="overflow-hidden rounded-[10px] border border-line bg-white"
       >
         <img
@@ -413,7 +352,7 @@ defmodule WhatsappbotWeb.PlaygroundLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <section :if={@workspace} class="space-y-5">
+    <section :if={@workspace} class="mx-auto max-w-6xl space-y-5">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <nav class="flex items-center gap-1.5 text-[13px] text-ink-faint">
@@ -429,219 +368,130 @@ defmodule WhatsappbotWeb.PlaygroundLive do
           </nav>
           <h1 class="mt-1 text-[22px] font-bold tracking-tight text-ink">Playground</h1>
         </div>
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            phx-click="toggle_sidebar"
-            class="inline-flex h-9 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-surface-alt xl:hidden"
-          >
-            <.icon name="hero-bars-3-bottom-left-mini" class="h-4 w-4" /> Insights
-          </button>
-          <.link
-            navigate={~p"/workspaces/#{@workspace.id}"}
-            class="inline-flex h-9 items-center rounded-full border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-surface-alt"
-          >
-            Back to dashboard
-          </.link>
-        </div>
+        <.link
+          navigate={~p"/workspaces/#{@workspace.id}"}
+          class="inline-flex h-9 items-center rounded-full border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-surface-alt"
+        >
+          Back to dashboard
+        </.link>
       </div>
 
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div class="flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card">
-          <div class="flex items-center gap-3 rounded-t-2xl bg-gradient-to-br from-brand-dark to-brand-mid px-5 py-3.5">
-            <div class="relative">
-              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-brand-dark">
-                {String.upcase(String.first(@workspace.name))}
-              </span>
-              <span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-brand-dark bg-brand-light">
-              </span>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-[15px] font-semibold text-white">{@workspace.name}</p>
-              <p class="truncate text-xs text-white/60">Connected to: {endpoint_label(@endpoint)}</p>
-            </div>
-            <button
-              type="button"
-              phx-click="clear_chat"
-              aria-label="Clear chat"
-              title="Clear chat"
-              class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              <.icon name="hero-trash-mini" class="h-4 w-4" />
-            </button>
+      <div class="flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card">
+        <div class="flex items-center gap-3 rounded-t-2xl bg-gradient-to-br from-brand-dark to-brand-mid px-5 py-3.5">
+          <div class="relative">
+            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-brand-dark">
+              {String.upcase(String.first(@workspace.name))}
+            </span>
+            <span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-brand-dark bg-brand-light">
+            </span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[15px] font-semibold text-white">{@workspace.name}</p>
+            <p class="truncate text-xs text-white/60">Connected to: {endpoint_label(@endpoint)}</p>
+          </div>
+          <button
+            type="button"
+            phx-click="clear_chat"
+            aria-label="Clear chat"
+            title="Clear chat"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
+          >
+            <.icon name="hero-trash-mini" class="h-4 w-4" />
+          </button>
+        </div>
+
+        <div
+          id="playground-scroll-region"
+          phx-hook="PlaygroundScroll"
+          data-message-count={MapSet.size(@message_ids)}
+          data-pending={to_string(not is_nil(@pending_user_message) or @assistant_pending)}
+          class="flex-1 overflow-y-auto px-4 py-4"
+          style="background-color: #ECE5DD; background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px); background-size: 20px 20px;"
+        >
+          <div
+            :if={
+              MapSet.size(@message_ids) == 0 and is_nil(@pending_user_message) and
+                not @assistant_pending
+            }
+            id="playground-empty"
+            class="flex h-full flex-col items-center justify-center text-center"
+          >
+            <.icon name="hero-chat-bubble-left-right" class="h-12 w-12 text-ink-faint/40" />
+            <p class="mt-3 text-sm text-ink-muted">Send a message to test your bot</p>
+            <p class="mt-1 text-[13px] text-ink-faint">
+              Responses mirror the live WhatsApp experience.
+            </p>
           </div>
 
-          <div
-            id="playground-scroll-region"
-            phx-hook="PlaygroundScroll"
-            data-message-count={MapSet.size(@message_ids)}
-            data-pending={to_string(not is_nil(@pending_user_message) or @assistant_pending)}
-            class="flex-1 overflow-y-auto px-4 py-4"
-            style="background-color: #ECE5DD; background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px); background-size: 20px 20px;"
-          >
-            <div
-              :if={
-                MapSet.size(@message_ids) == 0 and is_nil(@pending_user_message) and
-                  not @assistant_pending
-              }
-              id="playground-empty"
-              class="flex h-full flex-col items-center justify-center text-center"
-            >
-              <.icon name="hero-chat-bubble-left-right" class="h-12 w-12 text-ink-faint/40" />
-              <p class="mt-3 text-sm text-ink-muted">Send a message to test your bot</p>
-              <p class="mt-1 text-[13px] text-ink-faint">
-                Responses mirror the live WhatsApp experience.
-              </p>
+          <div id="playground-messages" phx-update="stream" class="space-y-2.5">
+            <div :for={{dom_id, message} <- @streams.messages} id={dom_id}>
+              <.message_bubble message={message} assistant_pending={@assistant_pending} />
             </div>
+          </div>
 
-            <div id="playground-messages" phx-update="stream" class="space-y-2.5">
-              <div :for={{dom_id, message} <- @streams.messages} id={dom_id}>
-                <.message_bubble message={message} assistant_pending={@assistant_pending} />
-              </div>
-            </div>
-
-            <div :if={@pending_user_message} class="mt-2.5">
-              <div class="flex justify-end">
-                <div class="max-w-[72%] space-y-1">
-                  <div class="rounded-[12px_12px_0_12px] bg-brand-pale px-3.5 py-2.5 text-[15px] text-ink opacity-80">
-                    <p class="whitespace-pre-wrap break-words leading-6">
-                      {@pending_user_message.content}
-                    </p>
-                    <div class="mt-1 flex items-center justify-end gap-2 text-[11px] text-ink-faint">
-                      <span>Sending...</span>
-                    </div>
+          <div :if={@pending_user_message} class="mt-2.5">
+            <div class="flex justify-end">
+              <div class="max-w-[72%] space-y-1">
+                <div class="rounded-[12px_12px_0_12px] bg-brand-pale px-3.5 py-2.5 text-[15px] text-ink opacity-80">
+                  <p class="whitespace-pre-wrap break-words leading-6">
+                    {@pending_user_message.content}
+                  </p>
+                  <div class="mt-1 flex items-center justify-end gap-2 text-[11px] text-ink-faint">
+                    <span>Sending...</span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div :if={@assistant_pending} class="mt-2.5 flex justify-start animate-bubble-in">
-              <div class="max-w-[78%] rounded-[12px_12px_12px_0] bg-white px-3.5 py-3 text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
-                <div class="flex items-center gap-2 text-sm text-ink-muted">
-                  <span class="flex items-center gap-1" aria-hidden="true">
-                    <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
-                    <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
-                    <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
-                  </span>
-                  <span>Bot is typing...</span>
-                </div>
+          <div :if={@assistant_pending} class="mt-2.5 flex justify-start animate-bubble-in">
+            <div class="max-w-[78%] rounded-[12px_12px_12px_0] bg-white px-3.5 py-3 text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+              <div class="flex items-center gap-2 text-sm text-ink-muted">
+                <span class="flex items-center gap-1" aria-hidden="true">
+                  <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
+                  <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
+                  <span class="h-2 w-2 rounded-full bg-brand-mid animate-pulse-dot"></span>
+                </span>
+                <span>Bot is typing...</span>
               </div>
             </div>
           </div>
-
-          <div class="flex items-center gap-2.5 rounded-b-2xl border-t border-line bg-[#F0F2F5] px-4 py-2.5">
-            <.form
-              for={@message_form}
-              as={:playground}
-              phx-submit="send_message"
-              class="flex flex-1 items-center gap-2.5"
-            >
-              <input
-                type="text"
-                name={@message_form[:message].name}
-                id={@message_form[:message].id}
-                value={@message_form[:message].value}
-                placeholder="Type a message..."
-                autocomplete="off"
-                disabled={@assistant_pending}
-                class="flex-1 rounded-full border border-line bg-white px-4 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand-mid focus:ring-[3px] focus:ring-brand-mid/10"
-              />
-              <button
-                type="submit"
-                aria-label="Send message"
-                disabled={@assistant_pending}
-                class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-dark text-white transition hover:bg-brand-mid active:scale-95"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  class="h-[18px] w-[18px]"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                </svg>
-              </button>
-            </.form>
-          </div>
         </div>
 
-        <aside class={["space-y-4", !@sidebar_open && "hidden xl:block"]}>
-          <div class="overflow-hidden rounded-xl border border-line bg-white shadow-card">
-            <div class="flex items-center justify-between border-b border-line px-4 py-3.5">
-              <h3 class="text-sm font-semibold text-ink">Session insights</h3>
-              <button
-                type="button"
-                phx-click="refresh_endpoint_data"
-                aria-label="Refresh endpoint data"
-                title="Refresh"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-ink-faint transition hover:bg-surface-alt hover:text-ink"
-              >
-                <.icon name="hero-arrow-path-mini" class="h-4 w-4" />
-              </button>
-            </div>
-            <div class="flex items-baseline gap-2 px-4 py-4">
-              <span class="text-[10px] font-bold uppercase tracking-[1px] text-ink-faint">
-                Tokens used
-              </span>
-              <span
-                id="token-counter"
-                phx-hook="TokenCounter"
-                class="ml-auto text-[32px] font-bold leading-none text-ink"
-              >
-                {@session_tokens}
-              </span>
-            </div>
-          </div>
-
-          <details
-            open
-            class="group overflow-hidden rounded-xl border border-line bg-white shadow-card"
+        <div class="flex items-center gap-2.5 rounded-b-2xl border-t border-line bg-[#F0F2F5] px-4 py-2.5">
+          <.form
+            for={@message_form}
+            as={:playground}
+            phx-submit="send_message"
+            class="flex flex-1 items-center gap-2.5"
           >
-            <summary class="flex cursor-pointer list-none items-center justify-between border-b border-line px-4 py-3.5">
-              <span class="flex items-center gap-2 text-sm font-semibold text-ink">
-                Endpoint data preview
-                <span class={[
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  endpoint_status(@endpoint) == :live && "bg-[#E8FFF3] text-brand-mid",
-                  endpoint_status(@endpoint) == :none && "bg-surface-alt text-ink-faint"
-                ]}>
-                  <span class={[
-                    "h-1.5 w-1.5 rounded-full",
-                    endpoint_status(@endpoint) == :live && "animate-pulse-dot bg-brand-light",
-                    endpoint_status(@endpoint) == :none && "bg-ink-faint"
-                  ]}>
-                  </span>
-                  {if endpoint_status(@endpoint) == :live, do: "Live", else: "No endpoint"}
-                </span>
-              </span>
-              <.icon
-                name="hero-chevron-down-mini"
-                class="h-4 w-4 text-ink-faint transition group-open:rotate-180"
-              />
-            </summary>
-            <pre class="code-panel max-h-[220px] overflow-auto px-4 py-3.5"><%= @endpoint_preview_json || "{}" %></pre>
-          </details>
-
-          <details
-            open
-            class="group overflow-hidden rounded-xl border border-line bg-white shadow-card"
-          >
-            <summary class="flex cursor-pointer list-none items-center justify-between border-b border-line px-4 py-3.5">
-              <span class="text-sm font-semibold text-ink">Last system prompt</span>
-              <.icon
-                name="hero-chevron-down-mini"
-                class="h-4 w-4 text-ink-faint transition group-open:rotate-180"
-              />
-            </summary>
-            <%= if @last_system_prompt do %>
-              <pre class="code-panel max-h-[220px] overflow-auto px-4 py-3.5"><%= @last_system_prompt %></pre>
-            <% else %>
-              <p class="px-4 py-6 text-center text-[13px] italic text-ink-faint">
-                No prompt sent yet.
-              </p>
-            <% end %>
-          </details>
-        </aside>
+            <input
+              type="text"
+              name={@message_form[:message].name}
+              id={@message_form[:message].id}
+              value={@message_form[:message].value}
+              placeholder="Type a message..."
+              autocomplete="off"
+              disabled={@assistant_pending}
+              class="flex-1 rounded-full border border-line bg-white px-4 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand-mid focus:ring-[3px] focus:ring-brand-mid/10"
+            />
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={@assistant_pending}
+              class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-dark text-white transition hover:bg-brand-mid active:scale-95"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-[18px] w-[18px]"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </.form>
+        </div>
       </div>
     </section>
     """
@@ -731,10 +581,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
     end)
   end
 
-  defp maybe_count_tokens(socket, %Message{} = message) do
-    update(socket, :session_tokens, &(&1 + (message.tokens_used || 0)))
-  end
-
   defp reconcile_pending_state(socket, %Message{role: "user", content: content}) do
     case socket.assigns.pending_user_message do
       %{content: ^content} -> assign(socket, :pending_user_message, nil)
@@ -761,45 +607,10 @@ defmodule WhatsappbotWeb.PlaygroundLive do
     }
   end
 
-  defp preview_json(nil), do: nil
-  defp preview_json(data), do: Jason.encode!(data, pretty: true)
-
   defp message_ids(messages) do
     messages
     |> Enum.map(& &1.id)
     |> MapSet.new()
-  end
-
-  defp total_tokens(messages) do
-    Enum.reduce(messages, 0, fn message, acc -> acc + (message.tokens_used || 0) end)
-  end
-
-  defp latest_endpoint_snapshot(messages, endpoint) do
-    messages
-    |> Enum.reverse()
-    |> Enum.find_value(& &1.endpoint_snapshot)
-    |> case do
-      nil -> current_endpoint_snapshot(endpoint)
-      snapshot -> snapshot
-    end
-  end
-
-  defp current_endpoint_snapshot(nil), do: nil
-  defp current_endpoint_snapshot(endpoint), do: endpoint.cached_data
-
-  defp rebuild_system_prompt(workspace, messages) do
-    case Enum.find(
-           Enum.reverse(messages),
-           &(&1.role == "user" and not is_nil(&1.endpoint_snapshot))
-         ) do
-      nil ->
-        nil
-
-      message ->
-        workspace
-        |> ContextBuilder.build_system_prompt(message.endpoint_snapshot)
-        |> CtaInjector.inject_cta_rules(CTARules.list_cta_rules(workspace.id))
-    end
   end
 
   defp endpoint_label(nil), do: "not configured"
@@ -808,11 +619,6 @@ defmodule WhatsappbotWeb.PlaygroundLive do
   defp endpoint_label(%{url: url}) do
     URI.parse(url).host || url
   end
-
-  defp endpoint_status(nil), do: :none
-  defp endpoint_status(%{url: nil}), do: :none
-  defp endpoint_status(%{url: url}) when is_binary(url), do: :live
-  defp endpoint_status(_), do: :none
 
   defp cta_type(cta), do: payload_value(cta, "type")
   defp cta_payload(cta), do: payload_value(cta, "payload") || %{}
@@ -867,7 +673,9 @@ defmodule WhatsappbotWeb.PlaygroundLive do
 
   defp payload_value(_value, _key), do: nil
 
-  defp cta_preview?(payload) do
+  defp cta_preview?(type, _payload) when type in ["reply_buttons", "list_message"], do: false
+
+  defp cta_preview?(_type, payload) do
     payload_value(payload, "image_url") || payload_value(payload, "title") ||
       payload_value(payload, "body")
   end
